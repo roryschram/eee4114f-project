@@ -8,10 +8,42 @@ import numpy as np
 t = transforms.Compose([transforms.Resize((28,28)),transforms.ToTensor(),transforms.Grayscale(num_output_channels=1)])
 
 # Load datasets for training and testing.
-testData = datasets.ImageFolder('/NN/testData/', transform=t)
+testData = datasets.ImageFolder('testData/', transform=t)
+
+class Net(torch.nn.Module):   
+    def __init__(self):
+        super(Net, self).__init__()
+
+        self.cnn_layers = torch.nn.Sequential(
+            # Defining a 2D convolution layer
+            torch.nn.Conv2d(1, 4, kernel_size=3, stride=1, padding=1),
+            torch.nn.BatchNorm2d(4),
+            torch.nn.ReLU(),
+            torch.nn.MaxPool2d(kernel_size=2, stride=2),
+            
+            # Defining another 2D convolution layer
+            torch.nn.Conv2d(4, 4, kernel_size=3, stride=1, padding=1),
+            torch.nn.BatchNorm2d(4),
+            torch.nn.ReLU(),
+            torch.nn.MaxPool2d(kernel_size=2, stride=2),
+        )
+
+        self.linear_layers = torch.nn.Sequential(
+            torch.nn.Linear(4 * 7 * 7, 100),
+            torch.nn.ReLU(),
+            torch.nn.Linear(100, 10),
+        )
+
+    # Defining the forward pass    
+    def forward(self, x):
+        x = self.cnn_layers(x)
+        x = x.view(x.size(0), -1)
+        x = self.linear_layers(x)
+        return x
 
 # Load model
-model = torch.load("modelNN")
+model = Net()
+model.load_state_dict(torch.load("modelCNN"))
 
 # Determine the accuracy of our clasifier
 # =======================================
@@ -29,14 +61,11 @@ plt.yticks([])
 plt.xticks([])
 plt.show()
 
-# The tensor images has the shape [10000, 1, 28, 28]. Reshape the tensor to
-# [10000, 784] as our model expected a flat vector.
-data = images.view(n, -1)
 
 # Use our model to compute the class scores for all images. The result is a
 # tensor with shape [10000, 10]. Row i stores the scores for image images[i].
 # Column j stores the score for class j.
-predictions = model(data)
+predictions = model(images)
 
 # For each row determine the column index with the maximum score. This is the
 # predicted class.

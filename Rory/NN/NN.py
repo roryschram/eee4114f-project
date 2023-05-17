@@ -13,7 +13,7 @@ mnist_val = datasets.MNIST("./", train=False, download=True, transform=t)
 
 # Hyperparameters for our network
 input_size = 784
-hidden_sizes = [700, 600, 500, 400, 300, 200, 100]
+hidden_sizes = [500, 250]
 output_size = 10
 # Build a feed-forward network
 model = torch.nn.Sequential(
@@ -21,17 +21,7 @@ model = torch.nn.Sequential(
     torch.nn.ReLU(),
     torch.nn.Linear(hidden_sizes[0], hidden_sizes[1]),
     torch.nn.ReLU(),
-    torch.nn.Linear(hidden_sizes[1], hidden_sizes[2]),
-    torch.nn.ReLU(),
-    torch.nn.Linear(hidden_sizes[2], hidden_sizes[3]),
-    torch.nn.ReLU(),
-    torch.nn.Linear(hidden_sizes[3], hidden_sizes[4]),
-    torch.nn.ReLU(),
-    torch.nn.Linear(hidden_sizes[4], hidden_sizes[5]),
-    torch.nn.ReLU(),
-    torch.nn.Linear(hidden_sizes[5], hidden_sizes[6]),
-    torch.nn.ReLU(),
-    torch.nn.Linear(hidden_sizes[6], output_size),
+    torch.nn.Linear(hidden_sizes[1], output_size),
 )   
 
 print(model)

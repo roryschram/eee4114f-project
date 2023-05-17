@@ -21,19 +21,18 @@ class Net(torch.nn.Module):
 
         self.cnn_layers = torch.nn.Sequential(
             # Defining a 2D convolution layer
-            torch.nn.Conv2d(1, 4, kernel_size=3, stride=1, padding=1),
-            torch.nn.BatchNorm2d(4),
-            torch.nn.ReLU(inplace=True),
-            torch.nn.MaxPool2d(kernel_size=2, stride=2),
-            # Defining another 2D convolution layer
-            torch.nn.Conv2d(4, 4, kernel_size=3, stride=1, padding=1),
-            torch.nn.BatchNorm2d(4),
-            torch.nn.ReLU(inplace=True),
-            torch.nn.MaxPool2d(kernel_size=2, stride=2),
+            torch.nn.Conv2d(1, 8, (5, 5)),
+            torch.nn.ReLU(),
+            torch.nn.MaxPool2d((2, 2)),
+            torch.nn.Conv2d(8, 8, (3, 3)),
+            torch.nn.ReLU(),
+            torch.nn.MaxPool2d((3, 3)),
         )
 
         self.linear_layers = torch.nn.Sequential(
-            torch.nn.Linear(4 * 7 * 7, 10)
+            torch.nn.Linear(324, 128),
+            torch.nn.ReLU(),
+            torch.nn.Linear(128, 10),
         )
 
     # Defining the forward pass    
@@ -56,11 +55,11 @@ print(model)
 
 
 # We train the model with batches of 500 examples.
-batch_size = 500
+batch_size = 1000
 train_loader = torch.utils.data.DataLoader(mnist_training, batch_size=batch_size, shuffle=True)
 losses = []
 
-for epoch in range(2):
+for epoch in range(10):
     for imgs, labels in train_loader:
         n = len(imgs)
         # Reshape data from [500, 1, 28, 28] to [500, 784] and use the model to make predictions.
@@ -73,4 +72,4 @@ for epoch in range(2):
         losses.append(float(loss))
     print(f"Epoch: {epoch}, Loss: {float(loss)}")
 
-torch.save(model, "modelCNN")
+torch.save(model.state_dict(), "modelCNN")
