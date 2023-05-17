@@ -21,24 +21,27 @@ class Net(torch.nn.Module):
 
         self.cnn_layers = torch.nn.Sequential(
             # Defining a 2D convolution layer
-            torch.nn.Conv2d(1, 8, (5, 5)),
+            torch.nn.Conv2d(1, 4, kernel_size=7, stride=1, padding=7//2),
             torch.nn.ReLU(),
-            torch.nn.MaxPool2d((2, 2)),
-            torch.nn.Conv2d(8, 8, (3, 3)),
+            torch.nn.MaxPool2d(2),
+            # Defining another 2D convolution layer
+            torch.nn.Conv2d(4, 4, kernel_size=7, stride=1, padding=7//2),
             torch.nn.ReLU(),
-            torch.nn.MaxPool2d((3, 3)),
+            torch.nn.MaxPool2d(2),    
         )
 
         self.linear_layers = torch.nn.Sequential(
-            torch.nn.Linear(324, 128),
+            torch.nn.Flatten(),
+            torch.nn.Linear(196, 125),
             torch.nn.ReLU(),
-            torch.nn.Linear(128, 10),
+            torch.nn.Linear(125, 80),
+            torch.nn.ReLU(),
+            torch.nn.Linear(80, 10),
         )
 
     # Defining the forward pass    
     def forward(self, x):
         x = self.cnn_layers(x)
-        x = x.view(x.size(0), -1)
         x = self.linear_layers(x)
         return x
 
@@ -46,7 +49,7 @@ class Net(torch.nn.Module):
 model = Net()
 
 # Use Adam as optimizer.
-opt = torch.optim.Adam(params=model.parameters(), lr=0.01)
+opt = torch.optim.Adam(params=model.parameters(), lr=0.001)
 
 # Use mean squared error for as loss function.
 loss_fn = torch.nn.CrossEntropyLoss()
@@ -55,7 +58,7 @@ print(model)
 
 
 # We train the model with batches of 500 examples.
-batch_size = 1000
+batch_size = 250
 train_loader = torch.utils.data.DataLoader(mnist_training, batch_size=batch_size, shuffle=True)
 losses = []
 

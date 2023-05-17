@@ -16,28 +16,27 @@ class Net(torch.nn.Module):
 
         self.cnn_layers = torch.nn.Sequential(
             # Defining a 2D convolution layer
-            torch.nn.Conv2d(1, 4, kernel_size=3, stride=1, padding=1),
-            torch.nn.BatchNorm2d(4),
+            torch.nn.Conv2d(1, 4, kernel_size=7, stride=1, padding=7//2),
             torch.nn.ReLU(),
-            torch.nn.MaxPool2d(kernel_size=2, stride=2),
-            
+            torch.nn.MaxPool2d(2),
             # Defining another 2D convolution layer
-            torch.nn.Conv2d(4, 4, kernel_size=3, stride=1, padding=1),
-            torch.nn.BatchNorm2d(4),
+            torch.nn.Conv2d(4, 4, kernel_size=7, stride=1, padding=7//2),
             torch.nn.ReLU(),
-            torch.nn.MaxPool2d(kernel_size=2, stride=2),
+            torch.nn.MaxPool2d(2),    
         )
 
         self.linear_layers = torch.nn.Sequential(
-            torch.nn.Linear(4 * 7 * 7, 100),
+            torch.nn.Flatten(),
+            torch.nn.Linear(196, 125),
             torch.nn.ReLU(),
-            torch.nn.Linear(100, 10),
+            torch.nn.Linear(125, 80),
+            torch.nn.ReLU(),
+            torch.nn.Linear(80, 10),
         )
 
     # Defining the forward pass    
     def forward(self, x):
         x = self.cnn_layers(x)
-        x = x.view(x.size(0), -1)
         x = self.linear_layers(x)
         return x
 
@@ -53,14 +52,14 @@ n = 80
 loader = torch.utils.data.DataLoader(testData, batch_size=n, shuffle=True)
 dataiter = iter(loader)
 images, labels = next(dataiter)
-
-fig = plt.figure()
-plt.imshow(images[0][0], cmap='gray')
-plt.title("Test Data: {}".format(labels[0]))
-plt.yticks([])
-plt.xticks([])
-plt.show()
-
+#
+#fig = plt.figure()
+#plt.imshow(images[0][0], cmap='gray')
+#plt.title("Test Data: {}".format(labels[0]))
+#plt.yticks([])
+#plt.xticks([])
+#plt.show()
+#
 
 # Use our model to compute the class scores for all images. The result is a
 # tensor with shape [10000, 10]. Row i stores the scores for image images[i].
