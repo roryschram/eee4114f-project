@@ -84,7 +84,7 @@ model = Network()
 optimizer = optim.Adam(model.parameters(), lr=0.01)
 criterion = nn.CrossEntropyLoss()#nn.MSELoss()
 
-epochs = 10
+epochs = 1
 train_loss, val_loss = [], []
 accuracy_total_train, accuracy_total_val = [], []
 
@@ -151,7 +151,7 @@ for epoch in range(epochs):
 print("-------------------------------------------------")    
 
 transform_1 = transforms.Compose([transforms.Resize((28,28)),transforms.ToTensor(),transforms.Grayscale(num_output_channels=1)])
-test_set = datasets.ImageFolder('testData/',transform=transform_1)
+test_set = datasets.ImageFolder('/Users/khavishgovind/Documents/EEE4114/ML Project/eee4114f-project/Khavish/testData/',transform=transform_1)
 testLoader = torch.utils.data.DataLoader(test_set, batch_size=80, shuffle=True)
 
 #fig = plt.figure()
