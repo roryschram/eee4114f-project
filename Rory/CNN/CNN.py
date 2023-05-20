@@ -11,8 +11,8 @@ t = transforms.ToTensor()
 mnist_training = datasets.MNIST("./", train=True, download=True, transform=t)
 mnist_val = datasets.MNIST("./", train=False, download=True, transform=t)
 
-trainLoader = torch.utils.data.DataLoader(mnist_training, batch_size=600, shuffle=True)
-validationLoader = torch.utils.data.DataLoader(mnist_val, batch_size=600, shuffle=True)
+trainLoader = torch.utils.data.DataLoader(mnist_training, batch_size=500, shuffle=True)
+validationLoader = torch.utils.data.DataLoader(mnist_val, batch_size=500, shuffle=True)
 
 
 class Net(torch.nn.Module):   
@@ -27,7 +27,8 @@ class Net(torch.nn.Module):
             # Defining another 2D convolution layer
             torch.nn.Conv2d(4, 4, kernel_size=7, stride=1, padding=7//2),
             torch.nn.ReLU(),
-            torch.nn.MaxPool2d(2),    
+            torch.nn.Dropout2d(0.2), 
+            torch.nn.MaxPool2d(2),  
         )
 
         self.linear_layers = torch.nn.Sequential(
@@ -49,7 +50,7 @@ class Net(torch.nn.Module):
 model = Net()
 
 # Use Adam as optimizer.
-opt = torch.optim.Adam(params=model.parameters(), lr=0.001)
+opt = torch.optim.Adam(params=model.parameters(), lr=0.005)
 
 # Use mean squared error for as loss function.
 loss_fn = torch.nn.CrossEntropyLoss()
@@ -58,7 +59,7 @@ print(model)
 
 
 # We train the model with batches of 500 examples.
-batch_size = 250
+batch_size = 500
 train_loader = torch.utils.data.DataLoader(mnist_training, batch_size=batch_size, shuffle=True)
 losses = []
 

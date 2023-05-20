@@ -19,8 +19,10 @@ output_size = 10
 model = torch.nn.Sequential(
     torch.nn.Linear(input_size, hidden_sizes[0]),
     torch.nn.ReLU(),
+    #torch.nn.Dropout1d(0.1),
     torch.nn.Linear(hidden_sizes[0], hidden_sizes[1]),
     torch.nn.ReLU(),
+    #torch.nn.Dropout1d(0.1),
     torch.nn.Linear(hidden_sizes[1], output_size),
 )   
 
@@ -36,25 +38,42 @@ loss_fn = torch.nn.CrossEntropyLoss()
 # We train the model with batches of 500 examples.
 batch_size = 500
 train_loader = torch.utils.data.DataLoader(mnist_training, batch_size=batch_size, shuffle=True)
+validation_loader = torch.utils.data.DataLoader(mnist_val, batch_size=batch_size, shuffle=True)
 
-losses = []
+training_losses, validation_losses = [], []
 
-for epoch in range(2):
+for epoch in range(10):
     for imgs, labels in train_loader:
         n = len(imgs)
         # Reshape data from [500, 1, 28, 28] to [500, 784] and use the model to make predictions.
         predictions = model(imgs.view(n,-1))  
         # Compute the loss.
         loss = loss_fn(predictions, labels)
-
         opt.zero_grad()
         loss.backward()
         opt.step()
-        losses.append(float(loss))
+        training_losses.append(float(loss))
     print(f"Epoch: {epoch}, Loss: {float(loss)}")
 
+    # validating our model
+    for imgs, labels in validation_loader:
+        n = len(imgs)
+        # Reshape data from [500, 1, 28, 28] to [500, 784] and use the model to make predictions.
+        predictions = model(imgs.view(n,-1))  
+        # Compute the loss.
+        loss = loss_fn(predictions, labels)
+        opt.zero_grad()
+        loss.backward()
+        opt.step()
+        validation_losses.append(float(loss))
+    print(f"Epoch: {epoch}, Validation Loss: {float(loss)}")
+
+
 # Plot learning curve.
-#plt.plot(losses)
+#plt.plot(training_losses, "r")
+#plt.title("Training Losses of the Neural Network")
+#plt.xlabel("Training Images")
+#plt.ylabel("Loss")
 #plt.show()
 
 
@@ -63,7 +82,7 @@ for epoch in range(2):
 # =======================================
 
 # Load all 10000 images from the validation set.
-n = 10000
+n = 500
 loader = torch.utils.data.DataLoader(mnist_val, batch_size=n)
 dataiter = iter(loader)
 images, labels = next(dataiter)

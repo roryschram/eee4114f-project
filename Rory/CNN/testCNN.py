@@ -4,6 +4,9 @@ from torchvision import datasets, transforms
 import matplotlib.pyplot as plt
 import torch.nn.functional as F
 import numpy as np
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+import pandas as pd
+import seaborn as sns
 
 t = transforms.Compose([transforms.Resize((28,28)),transforms.ToTensor(),transforms.Grayscale(num_output_channels=1)])
 
@@ -18,19 +21,23 @@ class Net(torch.nn.Module):
             # Defining a 2D convolution layer
             torch.nn.Conv2d(1, 4, kernel_size=7, stride=1, padding=7//2),
             torch.nn.ReLU(),
+            torch.nn.Dropout2d(0.2),
             torch.nn.MaxPool2d(2),
             # Defining another 2D convolution layer
             torch.nn.Conv2d(4, 4, kernel_size=7, stride=1, padding=7//2),
             torch.nn.ReLU(),
-            torch.nn.MaxPool2d(2),    
+            torch.nn.Dropout2d(0.2), 
+            torch.nn.MaxPool2d(2),  
         )
 
         self.linear_layers = torch.nn.Sequential(
             torch.nn.Flatten(),
             torch.nn.Linear(196, 125),
             torch.nn.ReLU(),
+            torch.nn.Dropout2d(0.2),
             torch.nn.Linear(125, 80),
             torch.nn.ReLU(),
+            torch.nn.Dropout2d(0.2),
             torch.nn.Linear(80, 10),
         )
 
@@ -75,3 +82,22 @@ predicted_classes = torch.argmax(predictions, dim=1)
 accuracy = sum(predicted_classes.numpy() == labels.numpy()) / n
 
 print("The accuracy of the model is: "+str(accuracy))
+
+cm = confusion_matrix(labels.detach().numpy(), np.array(predicted_classes))
+ConfusionMatrixDisplay(cm).plot()
+
+cf_matrix = confusion_matrix(labels.detach().numpy(), np.array(predicted_classes))
+class_names = ('0', '1', '2', '3','4', '5', '6', '7', '8', '9')
+
+# Create pandas dataframe
+dataframe = pd.DataFrame(cf_matrix, index=class_names, columns=class_names)
+
+plt.figure(figsize=(8, 6))
+
+# Create heatmap
+sns.heatmap(dataframe, annot=True, cbar=None,cmap="YlGnBu",fmt="d")
+
+plt.title("Confusion Matrix"), plt.tight_layout()
+plt.ylabel("True Class"), 
+plt.xlabel("Predicted Class")
+plt.show()

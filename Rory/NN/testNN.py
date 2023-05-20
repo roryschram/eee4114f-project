@@ -4,6 +4,9 @@ from torchvision import datasets, transforms
 import matplotlib.pyplot as plt
 import torch.nn.functional as F
 import numpy as np
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+import pandas as pd
+import seaborn as sns
 
 
 t = transforms.Compose([transforms.Resize((28,28)),transforms.ToTensor(),transforms.Grayscale(num_output_channels=1)])
@@ -23,13 +26,6 @@ loader = torch.utils.data.DataLoader(testData, batch_size=n, shuffle=True)
 dataiter = iter(loader)
 images, labels = next(dataiter)
 
-fig = plt.figure()
-plt.imshow(images[0][0], cmap='gray')
-plt.title("Test Data: {}".format(labels[0]))
-plt.yticks([])
-plt.xticks([])
-plt.show()
-
 # The tensor images has the shape [10000, 1, 28, 28]. Reshape the tensor to
 # [10000, 784] as our model expected a flat vector.
 data = images.view(n, -1)
@@ -48,3 +44,23 @@ predicted_classes = torch.argmax(predictions, dim=1)
 accuracy = sum(predicted_classes.numpy() == labels.numpy()) / n
 
 print("The accuracy of the model is: "+str(accuracy))
+
+
+cm = confusion_matrix(labels.detach().numpy(), np.array(predicted_classes))
+ConfusionMatrixDisplay(cm).plot()
+
+cf_matrix = confusion_matrix(labels.detach().numpy(), np.array(predicted_classes))
+class_names = ('0', '1', '2', '3','4', '5', '6', '7', '8', '9')
+
+# Create pandas dataframe
+dataframe = pd.DataFrame(cf_matrix, index=class_names, columns=class_names)
+
+plt.figure(figsize=(8, 6))
+
+# Create heatmap
+sns.heatmap(dataframe, annot=True, cbar=None,cmap="YlGnBu",fmt="d")
+
+plt.title("Confusion Matrix"), plt.tight_layout()
+plt.ylabel("True Class"), 
+plt.xlabel("Predicted Class")
+plt.show()
