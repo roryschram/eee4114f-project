@@ -5,6 +5,8 @@ import torch
 from torch import nn
 from torch import optim
 import torch.nn.functional as F
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+import torchvision.models as models
 
 #import helper
 #matplotlib inline
@@ -12,22 +14,21 @@ import torch.nn.functional as F
 import matplotlib.pyplot as plt
 import numpy as np
 
-# moves your model to train on your gpu if available else it uses your cpu
-#device = ("cuda" if torch.cuda.is_available() else "cpu")
-
 # Define transform to normalize data
 transform = transforms.Compose([transforms.ToTensor()])
 
 # Download and load the training data
 train_set = datasets.MNIST("./", download=True, train=True, transform=transform)
-trainLoader = torch.utils.data.DataLoader(train_set, batch_size=600, shuffle=True)
+trainLoader = torch.utils.data.DataLoader(train_set, batch_size=500, shuffle=True)
 
 validation_set = datasets.MNIST("./", download=True, train=False, transform=transform)
-validationLoader = torch.utils.data.DataLoader(validation_set, batch_size=600, shuffle=True)
+validationLoader = torch.utils.data.DataLoader(validation_set, batch_size=500, shuffle=True)
 
 
 training_data = enumerate(trainLoader)
 batch_idx, (images, labels) = next(training_data)
+
+#print(images[1][0])
 #print(type(images)) # Checking the datatype 
 #print(images.shape) # the size of the image
 #print(labels.shape) # the size of the labels
@@ -62,7 +63,7 @@ class Network(nn.Module):
 
         # Linear layer
         self.linear_layers = nn.Sequential(
-                # We have the output_channel=24 of our second conv layer, and 7*7 is derived by the formula 
+                # We have the output_channel=24 of our second conv layer, and 7*7 is derived by the formular 
                 # which is the output of each convolutional layer
                 nn.Linear(in_features=24*7*7, out_features=64),          
                 nn.ReLU(),
@@ -78,15 +79,17 @@ class Network(nn.Module):
         # Then pass it through the linear layer
         x = self.linear_layers(x)
         return x
+  
     
 model = Network()
 
-optimizer = optim.Adam(model.parameters(), lr=0.01)
+optimizer = optim.Adam(model.parameters())#optim.SGD(model.parameters(),lr=0.01)
 criterion = nn.CrossEntropyLoss()#nn.MSELoss()
 
-epochs = 1
+epochs = 10
 train_loss, val_loss = [], []
 accuracy_total_train, accuracy_total_val = [], []
+
 
 for epoch in range(epochs):
    
@@ -98,16 +101,18 @@ for epoch in range(epochs):
     total = 0
     # training our model
     for idx, (image, label) in enumerate(trainLoader):
+        #fig = plt.figure()
+        #plt.imshow(images[3][0], cmap='inferno')
+        #plt.title("Test Data: {}".format(labels[3]))
+        #plt.show()
 
         optimizer.zero_grad()
-
-        n = len(image)
+        #n = len(image)
         pred = model(image)
         oneHotLabels = F.one_hot(label, num_classes=10)
         #loss = criterion(pred, oneHotLabels.to(torch.float32))
         loss = criterion(pred, label)
         total_train_loss += loss.item()
-
         loss.backward()
         optimizer.step()
 
@@ -148,55 +153,22 @@ for epoch in range(epochs):
             "Validation loss: {:.4f}  ".format(total_val_loss),
             "Train accuracy: {:.4f}  ".format(accuracy_train),
             "Validation accuracy: {:.4f}  ".format(accuracy_val))
-print("-------------------------------------------------")    
+print("-------------------------------------------------")   
 
-transform_1 = transforms.Compose([transforms.Resize((28,28)),transforms.ToTensor(),transforms.Grayscale(num_output_channels=1)])
-test_set = datasets.ImageFolder('/Users/khavishgovind/Documents/EEE4114/ML Project/eee4114f-project/Khavish/testData/',transform=transform_1)
-testLoader = torch.utils.data.DataLoader(test_set, batch_size=80, shuffle=True)
+plt.plot(train_loss, label='Training loss')
+plt.plot(val_loss, label='Validation loss')
+plt.legend()
+plt.xlabel("Epochs")
+plt.ylabel("Pecentage")
+plt.grid()
+plt.show()
 
-#fig = plt.figure()
-#for i in range(9):
-#    plt.subplot(3,3,i+1)
-#    plt.tight_layout()
-#    plt.imshow(images[i][0], cmap='inferno')
-#    plt.title("Test Data: {}".format(labels[i]))
-#    plt.yticks([])
-#    plt.xticks([])
-#    plt.show()
+plt.plot(accuracy_total_train, label='Training Accuracy')
+plt.plot(accuracy_total_val, label='Validation Accuracy')
+plt.legend()
+plt.xlabel("Epochs")
+plt.ylabel("Pecentage")
+plt.grid()
+plt.show()
 
-test_loss,accuracy_total_test = [],[]
-total_test_loss = 0
-
-# Testing our model
-model.eval()
-total = 0
-for idx, (images, labels) in enumerate(testLoader):
-    preds = model(images)
-    loss = criterion(preds, labels)
-    total_test_loss += loss.item()
-
-    preds = torch.nn.functional.softmax(preds, dim=1)
-
-    for i, p in enumerate(preds):
-        #print("--------")
-        #fig = plt.figure()
-        #plt.imshow(images[i][0], cmap='inferno')
-        #plt.title("Test Data: {}".format(labels[i]))
-        #print(torch.max(p.data, 0)[1])
-        #plt.xlabel("Prediction Label: {}".format(torch.max(p.data, 0)[1]))
-        #plt.show()
-        #print("--------")
-        #print(torch.max(p.data, 0)[1])
-        #print("Asscoaited labels is")
-        #print(labels[i])
-        #print("-------")
-        if labels[i] == torch.max(p.data, 0)[1]:
-            total = total + 1
-
-accuracy_test = total / len(test_set)
-accuracy_total_test.append(accuracy_test)
-
-total_test_loss = total_test_loss / (idx + 1)
-test_loss.append(total_test_loss)
-
-print("Test loss: {:.4f}  ".format(total_test_loss),"Test accuracy: {:.4f}  ".format(accuracy_test))
+torch.save(model,'/Users/khavishgovind/Documents/EEE4114/ML Project/eee4114f-project/Khavish/model.pt')
